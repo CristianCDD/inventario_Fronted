@@ -24,7 +24,11 @@ const ProductoList = () => {
     axios
       .get("https://inventarioapi-cz62.onrender.com/listado/")
       .then((response) => {
-        setProductos(response.data);
+        // Filtra los productos cuyo stock es mayor o igual a 1
+        const productosFiltrados = response.data.filter(
+          (producto) => producto.stock >= 1
+        );
+        setProductos(productosFiltrados);
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -46,11 +50,43 @@ const ProductoList = () => {
     axios
       .get("https://inventarioapi-cz62.onrender.com/listado/")
       .then((response) => {
-        setProductos(response.data); // Actualiza el estado con los nuevos productos
+        // Filtra los productos cuyo stock es mayor o igual a 1
+        const productosFiltrados = response.data.filter(
+          (producto) => producto.stock >= 1
+        );
+        setProductos(productosFiltrados); // Actualiza el estado con los productos filtrados
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
       });
+  };
+
+  // Función para eliminar un producto
+  const handleDelete = (id_producto) => {
+    // Mostrar el mensaje de confirmación
+    const isConfirmed = window.confirm(
+      "¿Estás seguro de eliminar este producto? Esto eliminará el historial de registros asociados."
+    );
+
+    // Si el usuario confirma la eliminación
+    if (isConfirmed) {
+      // Realizamos la solicitud DELETE al servidor para eliminar el producto
+      axios
+        .delete(
+          `https://inventarioapi-cz62.onrender.com/productos/${id_producto}/`
+        )
+        .then((response) => {
+          // Si la eliminación es exitosa, actualizamos la lista de productos
+          console.log(`Producto con ID ${id_producto} eliminado correctamente`);
+          refreshProductos(); // Actualiza la lista de productos
+        })
+        .catch((error) => {
+          console.error("Error eliminando el producto:", error);
+        });
+    } else {
+      // Si el usuario cancela, no hacemos nada
+      console.log("Eliminación cancelada");
+    }
   };
 
   return (
@@ -80,6 +116,7 @@ const ProductoList = () => {
               <TableCell>Código</TableCell>
               <TableCell>Stock</TableCell>
               <TableCell>Última Fecha de Movimiento</TableCell>
+              <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -89,6 +126,15 @@ const ProductoList = () => {
                 <TableCell>{producto.codigo}</TableCell>
                 <TableCell>{producto.stock}</TableCell>
                 <TableCell>{producto.ultima_fecha_movimiento}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => handleDelete(producto.id_producto)} // Llama a la función handleDelete
+                  >
+                    Eliminar
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
