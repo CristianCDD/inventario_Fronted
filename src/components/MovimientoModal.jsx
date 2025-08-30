@@ -1,114 +1,94 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Modal,
-  Button,
-  TextField,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-} from "@mui/material";
+import { Modal, Button, TextField, MenuItem } from "@mui/material";
+import "../styles/MovimientoModal.css"; // Importamos el archivo de estilos CSS
 
-const MovimientoModal = ({ onClose }) => {
+const MovimientoModal = ({ onClose, refreshProductos }) => {
   const [productos, setProductos] = useState([]);
   const [productoId, setProductoId] = useState("");
   const [tipoMovimiento, setTipoMovimiento] = useState("entrada");
   const [cantidad, setCantidad] = useState(0);
 
   useEffect(() => {
-    // Obtener los productos desde la API para mostrar en el select
     axios
-      .get("https://inventarioapi-cz62.onrender.com/listado/")
-      .then((response) => {
-        setProductos(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      });
+      .get("https://inventarioapi-cz62.onrender.com/productos/")
+      .then((response) => setProductos(response.data))
+      .catch((error) => console.error("Error al cargar productos:", error));
   }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const cantidadNumerica = parseInt(cantidad, 10);
+    if (isNaN(cantidadNumerica) || cantidadNumerica <= 0) {
+      alert("La cantidad debe ser un número positivo.");
+      return;
+    }
 
-    // Realizar la solicitud POST para agregar el movimiento
     axios
       .post("https://inventarioapi-cz62.onrender.com/movimientos/", {
         producto: productoId,
         tipo_movimiento: tipoMovimiento,
-        cantidad,
-        fecha: new Date().toISOString().split("T")[0], // Fecha actual
+        cantidad: cantidadNumerica,
+        fecha: new Date().toISOString().split("T")[0],
       })
       .then(() => {
-        onClose(); // Cerrar el modal
+        refreshProductos(); // Actualiza la lista de productos tras el POST
+        onClose(); // Cierra el modal
       })
       .catch((error) => {
-        console.error("Error creating movement:", error);
+        console.error("Error creando movimiento:", error);
       });
   };
 
   return (
     <Modal open={true} onClose={onClose}>
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "white",
-          width: "300px",
-          margin: "auto",
-          marginTop: "100px",
-          borderRadius: "8px",
-        }}
-      >
+      <div className="modal">
         <h2>Agregar Movimiento</h2>
         <form onSubmit={handleSubmit}>
-          <FormControl fullWidth margin="normal">
-            <InputLabel id="producto-select-label">Producto</InputLabel>
-            <Select
-              labelId="producto-select-label"
-              value={productoId}
-              onChange={(e) => setProductoId(e.target.value)}
-              label="Producto"
-              required
-            >
-              {productos.map((producto) => (
-                <MenuItem key={producto.codigo} value={producto.codigo}>
-                  {producto.nombre} ({producto.codigo})
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <TextField
+            select
+            label="Producto"
+            value={productoId}
+            onChange={(e) => setProductoId(e.target.value)}
+            fullWidth
+            className="text-field"
+            required
+            margin="normal"
+          >
+            <MenuItem value="">Seleccionar producto</MenuItem>
+            {productos.map((producto) => (
+              <MenuItem key={producto.id} value={producto.id}>
+                {producto.nombre} ({producto.codigo})
+              </MenuItem>
+            ))}
+          </TextField>
 
-          <FormControl fullWidth margin="normal">
-            <InputLabel id="tipo-movimiento-label">Tipo Movimiento</InputLabel>
-            <Select
-              labelId="tipo-movimiento-label"
-              value={tipoMovimiento}
-              onChange={(e) => setTipoMovimiento(e.target.value)}
-              label="Tipo Movimiento"
-              required
-            >
-              <MenuItem value="entrada">Entrada</MenuItem>
-              <MenuItem value="salida">Salida</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            select
+            label="Tipo Movimiento"
+            value={tipoMovimiento}
+            onChange={(e) => setTipoMovimiento(e.target.value)}
+            fullWidth
+            className="text-field"
+            required
+            margin="normal"
+          >
+            <MenuItem value="entrada">Entrada</MenuItem>
+            <MenuItem value="salida">Salida</MenuItem>
+          </TextField>
 
           <TextField
             label="Cantidad"
             type="number"
-            fullWidth
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
+            fullWidth
+            className="text-field"
             required
             margin="normal"
           />
 
-          <div
-            style={{
-              marginTop: "20px",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div className="form-buttons">
             <Button type="submit" variant="contained" color="primary">
               Guardar
             </Button>

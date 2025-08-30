@@ -1,35 +1,23 @@
 import React, { useState } from "react";
 import axios from "axios";
-import {
-  Modal,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from "@mui/material";
+import { Modal, Button, TextField } from "@mui/material";
+import "../styles/ProductoModal.css"; // Importamos el archivo de estilos CSS
 
 const ProductoModal = ({ onClose, refreshProductos }) => {
-  // Estado para almacenar los valores del formulario
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
 
-  // Función para manejar el envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Realizamos una solicitud POST para agregar el nuevo producto
     axios
       .post("https://inventarioapi-cz62.onrender.com/productos/", {
         nombre,
         codigo,
       })
       .then(() => {
-        // Refrescamos la lista de productos después de agregar el nuevo producto
-        refreshProductos();
-        // Cerramos el modal
-        onClose();
+        refreshProductos(); // Llamamos a refreshProductos para actualizar la lista
+        onClose(); // Cierra el modal
       })
       .catch((error) => {
         console.error("Error creando producto:", error);
@@ -38,31 +26,20 @@ const ProductoModal = ({ onClose, refreshProductos }) => {
 
   return (
     <Modal open={true} onClose={onClose}>
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "white",
-          width: "300px",
-          margin: "auto",
-          marginTop: "100px",
-          borderRadius: "8px",
-        }}
-      >
+      <div className="modal">
         <h2>Agregar Producto</h2>
         <form onSubmit={handleSubmit}>
-          {/* Campo Nombre */}
           <TextField
+            className="text-field"
             label="Nombre"
             type="text"
-            fullWidth
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             required
             margin="normal"
           />
-
-          {/* Campo Código */}
           <TextField
+            className="text-field"
             label="Código"
             type="text"
             fullWidth
@@ -71,15 +48,7 @@ const ProductoModal = ({ onClose, refreshProductos }) => {
             required
             margin="normal"
           />
-
-          {/* Botones de Guardar y Cerrar */}
-          <div
-            style={{
-              marginTop: "20px",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div className="form-buttons">
             <Button type="submit" variant="contained" color="primary">
               Guardar
             </Button>

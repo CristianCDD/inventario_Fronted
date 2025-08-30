@@ -12,6 +12,7 @@ import {
   Paper,
   Button,
 } from "@mui/material";
+import "../styles/ProductoList.css"; // Importamos el archivo de estilos CSS
 
 const ProductoList = () => {
   const [productos, setProductos] = useState([]);
@@ -40,6 +41,18 @@ const ProductoList = () => {
     setShowMovimientoModal(true);
   };
 
+  // Función para actualizar la lista de productos
+  const refreshProductos = () => {
+    axios
+      .get("https://inventarioapi-cz62.onrender.com/listado/")
+      .then((response) => {
+        setProductos(response.data); // Actualiza el estado con los nuevos productos
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+      });
+  };
+
   return (
     <div>
       <h1>Listado de Productos</h1>
@@ -59,7 +72,7 @@ const ProductoList = () => {
       </Button>
 
       {/* Material-UI Table */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} className="table-container">
         <Table>
           <TableHead>
             <TableRow>
@@ -86,19 +99,16 @@ const ProductoList = () => {
       {showProductoModal && (
         <ProductoModal
           onClose={() => setShowProductoModal(false)}
-          refreshProductos={() => {
-            axios
-              .get("https://inventarioapi-cz62.onrender.com/listado/")
-              .then((response) => {
-                setProductos(response.data);
-              });
-          }}
+          refreshProductos={refreshProductos} // Pasamos la función de actualización
         />
       )}
 
       {/* Modal para agregar movimiento */}
       {showMovimientoModal && (
-        <MovimientoModal onClose={() => setShowMovimientoModal(false)} />
+        <MovimientoModal
+          onClose={() => setShowMovimientoModal(false)}
+          refreshProductos={refreshProductos} // Pasamos la función de actualización
+        />
       )}
     </div>
   );
