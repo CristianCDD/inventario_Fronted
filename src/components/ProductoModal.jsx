@@ -1,6 +1,14 @@
-// components/ProductoModal.jsx
 import React, { useState } from "react";
 import axios from "axios";
+import {
+  Modal,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
 
 const ProductoModal = ({ onClose, refreshProductos }) => {
   // Estado para almacenar los valores del formulario
@@ -29,33 +37,59 @@ const ProductoModal = ({ onClose, refreshProductos }) => {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <Modal open={true} onClose={onClose}>
+      <div
+        style={{
+          padding: "20px",
+          backgroundColor: "white",
+          width: "300px",
+          margin: "auto",
+          marginTop: "100px",
+          borderRadius: "8px",
+        }}
+      >
         <h2>Agregar Producto</h2>
         <form onSubmit={handleSubmit}>
-          <div>
-            <label>Nombre:</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              required
-            />
+          {/* Campo Nombre */}
+          <TextField
+            label="Nombre"
+            type="text"
+            fullWidth
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+            margin="normal"
+          />
+
+          {/* Campo Código */}
+          <TextField
+            label="Código"
+            type="text"
+            fullWidth
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value)}
+            required
+            margin="normal"
+          />
+
+          {/* Botones de Guardar y Cerrar */}
+          <div
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <Button type="submit" variant="contained" color="primary">
+              Guardar
+            </Button>
+            <Button variant="outlined" onClick={onClose}>
+              Cerrar
+            </Button>
           </div>
-          <div>
-            <label>Código:</label>
-            <input
-              type="text"
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit">Guardar</button>
         </form>
-        <button onClick={onClose}>Cerrar</button>
       </div>
-    </div>
+    </Modal>
   );
 };
 
