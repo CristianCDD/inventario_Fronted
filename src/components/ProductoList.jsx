@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ProductoModal from "./ProductoModal";
 import MovimientoModal from "./MovimientoModal";
+import HistorialModal from "./HistorialModal";
 import {
   Table,
   TableBody,
@@ -12,86 +13,72 @@ import {
   Paper,
   Button,
 } from "@mui/material";
-import "../styles/ProductoList.css"; // Importamos el archivo de estilos CSS
+import "../styles/ProductoList.css";
 
 const ProductoList = () => {
   const [productos, setProductos] = useState([]);
   const [showProductoModal, setShowProductoModal] = useState(false);
   const [showMovimientoModal, setShowMovimientoModal] = useState(false);
+  const [showHistorialModal, setShowHistorialModal] = useState(false);
+  const [historialFechas, setHistorialFechas] = useState([]);
+  const [selectedProductoId, setSelectedProductoId] = useState(null); // <- clave para PATCH
 
-  // Fetch the product data from the API
   useEffect(() => {
+    cargarProductos();
+  }, []);
+
+  const cargarProductos = () => {
     axios
       .get("https://inventarioapi-cz62.onrender.com/listado/")
       .then((response) => {
-        // Filtra los productos cuyo stock es mayor o igual a 1
-        const productosFiltrados = response.data.filter(
-          (producto) => producto.stock >= 1
-        );
+        const productosFiltrados = response.data.filter((p) => p.stock >= 1);
         setProductos(productosFiltrados);
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
       });
-  }, []);
-
-  // Handle showing the "Agregar Producto" modal
-  const handleShowProductoModal = () => {
-    setShowProductoModal(true);
   };
 
-  // Handle showing the "Agregar Movimiento" modal
-  const handleShowMovimientoModal = () => {
-    setShowMovimientoModal(true);
-  };
+  const refreshProductos = () => cargarProductos();
 
-  // Función para actualizar la lista de productos
-  const refreshProductos = () => {
-    axios
-      .get("https://inventarioapi-cz62.onrender.com/listado/")
-      .then((response) => {
-        // Filtra los productos cuyo stock es mayor o igual a 1
-        const productosFiltrados = response.data.filter(
-          (producto) => producto.stock >= 1
-        );
-        setProductos(productosFiltrados); // Actualiza el estado con los productos filtrados
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      });
-  };
+  const handleShowProductoModal = () => setShowProductoModal(true);
+  const handleShowMovimientoModal = () => setShowMovimientoModal(true);
 
-  // Función para eliminar un producto
   const handleDelete = (id_producto) => {
-    // Mostrar el mensaje de confirmación
     const isConfirmed = window.confirm(
       "¿Estás seguro de eliminar este producto? Esto eliminará el historial de registros asociados."
     );
+    if (!isConfirmed) return;
 
-    // Si el usuario confirma la eliminación
-    if (isConfirmed) {
-      // Realizamos la solicitud DELETE al servidor para eliminar el producto
-      axios
-        .delete(
-          `https://inventarioapi-cz62.onrender.com/productos/${id_producto}/`
-        )
-        .then((response) => {
-          // Si la eliminación es exitosa, actualizamos la lista de productos
-          console.log(`Producto con ID ${id_producto} eliminado correctamente`);
-          refreshProductos(); // Actualiza la lista de productos
-        })
-        .catch((error) => {
-          console.error("Error eliminando el producto:", error);
-        });
-    } else {
-      // Si el usuario cancela, no hacemos nada
-      console.log("Eliminación cancelada");
-    }
+    axios
+      .delete(
+        `https://inventarioapi-cz62.onrender.com/productos/${id_producto}/`
+      )
+      .then(() => {
+        refreshProductos();
+      })
+      .catch((error) => {
+        console.error("Error eliminando el producto:", error);
+      });
+  };
+
+  const handleShowHistorial = (id_producto) => {
+    setSelectedProductoId(id_producto); // <-- necesario para PATCH
+    axios
+      .get(`https://inventarioapi-cz62.onrender.com/historial/${id_producto}`)
+      .then((response) => {
+        setHistorialFechas(response.data.historial_movimientos);
+        setShowHistorialModal(true);
+      })
+      .catch((error) => {
+        console.error("Error fetching historial:", error);
+      });
   };
 
   return (
     <div>
       <h1>Listado de Productos</h1>
+
       <Button
         variant="contained"
         onClick={handleShowProductoModal}
@@ -107,7 +94,6 @@ const ProductoList = () => {
         Agregar Movimiento
       </Button>
 
-      {/* Material-UI Table */}
       <TableContainer component={Paper} className="table-container">
         <Table>
           <TableHead>
@@ -121,7 +107,7 @@ const ProductoList = () => {
           </TableHead>
           <TableBody>
             {productos.map((producto) => (
-              <TableRow key={producto.codigo}>
+              <TableRow key={producto.id_producto}>
                 <TableCell>{producto.nombre}</TableCell>
                 <TableCell>{producto.codigo}</TableCell>
                 <TableCell>{producto.stock}</TableCell>
@@ -130,13 +116,27 @@ const ProductoList = () => {
                   <Button
                     variant="outlined"
                     color="secondary"
-                    onClick={() => handleDelete(producto.id_producto)} // Llama a la función handleDelete
+                    onClick={() => handleDelete(producto.id_producto)}
                   >
                     Eliminar
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => handleShowHistorial(producto.id_producto)}
+                    style={{ marginLeft: "10px" }}
+                  >
+                    Historial
                   </Button>
                 </TableCell>
               </TableRow>
             ))}
+            {productos.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No hay productos para mostrar
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -145,7 +145,7 @@ const ProductoList = () => {
       {showProductoModal && (
         <ProductoModal
           onClose={() => setShowProductoModal(false)}
-          refreshProductos={refreshProductos} // Pasamos la función de actualización
+          refreshProductos={refreshProductos}
         />
       )}
 
@@ -153,7 +153,30 @@ const ProductoList = () => {
       {showMovimientoModal && (
         <MovimientoModal
           onClose={() => setShowMovimientoModal(false)}
-          refreshProductos={refreshProductos} // Pasamos la función de actualización
+          refreshProductos={refreshProductos}
+        />
+      )}
+
+      {/* Modal para mostrar historial */}
+      {showHistorialModal && (
+        <HistorialModal
+          onClose={() => setShowHistorialModal(false)}
+          historialFechas={historialFechas}
+          idProducto={selectedProductoId} // <- necesario para PATCH
+          onSaved={() => {
+            // <- refrescar tras guardar
+            axios
+              .get(
+                `https://inventarioapi-cz62.onrender.com/historial/${selectedProductoId}`
+              )
+              .then((response) =>
+                setHistorialFechas(response.data.historial_movimientos)
+              )
+              .catch((err) =>
+                console.error("Error refrescando historial:", err)
+              );
+            refreshProductos();
+          }}
         />
       )}
     </div>

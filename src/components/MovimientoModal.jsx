@@ -12,7 +12,12 @@ const MovimientoModal = ({ onClose, refreshProductos }) => {
   useEffect(() => {
     axios
       .get("https://inventarioapi-cz62.onrender.com/productos/")
-      .then((response) => setProductos(response.data))
+      .then((response) => {
+        const productosOrdenados = response.data.sort((a, b) =>
+          a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" })
+        );
+        setProductos(productosOrdenados);
+      })
       .catch((error) => console.error("Error al cargar productos:", error));
   }, []);
 
@@ -89,11 +94,12 @@ const MovimientoModal = ({ onClose, refreshProductos }) => {
           />
 
           <div className="form-buttons">
-            <Button type="submit" variant="contained" color="primary">
-              Guardar
-            </Button>
             <Button variant="outlined" onClick={onClose}>
               Cerrar
+            </Button>
+
+            <Button type="submit" variant="contained" color="primary">
+              Guardar
             </Button>
           </div>
         </form>

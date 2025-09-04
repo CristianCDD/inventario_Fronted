@@ -49,11 +49,11 @@ const ProductoModal = ({ onClose, refreshProductos }) => {
             margin="normal"
           />
           <div className="form-buttons">
-            <Button type="submit" variant="contained" color="primary">
-              Guardar
-            </Button>
             <Button variant="outlined" onClick={onClose}>
               Cerrar
+            </Button>
+            <Button type="submit" variant="contained" color="primary">
+              Guardar
             </Button>
           </div>
         </form>

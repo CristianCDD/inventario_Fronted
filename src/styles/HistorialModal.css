@@ -1,0 +1,130 @@
+/* Contenedor principal del Paper del Dialog */
+.hm-paper {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+/* Título del diálogo */
+.hm-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  padding-right: 4px;
+}
+
+.hm-title-icon {
+  opacity: 0.9;
+}
+
+.hm-title-text {
+  font-weight: 800;
+}
+
+.hm-title-spacer {
+  flex: 1;
+}
+
+/* Contenido del diálogo */
+.hm-content {
+  max-height: 520px;
+  padding: 16px;
+  background-color: var(--hm-bg, #fafafa);
+}
+
+/* Estado vacío */
+.hm-empty {
+  padding: 64px 0;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.hm-empty-icon {
+  font-size: 56px !important;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+/* Lista de tarjetas */
+.hm-stack {
+  /* spacing lo maneja MUI, aquí puedes añadir márgenes si quieres */
+}
+
+/* Tarjeta individual */
+.hm-card {
+  border-radius: 12px !important;
+  transition: box-shadow 0.2s ease;
+}
+
+.hm-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.hm-card-header {
+  padding-bottom: 8px;
+}
+
+.hm-card-header-title {
+  flex-wrap: wrap;
+}
+
+.hm-card-id {
+  font-weight: 700 !important;
+}
+
+.hm-chip {
+  text-transform: capitalize !important;
+}
+
+/* Subtítulo (producto) */
+.hm-subheader {
+  color: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Contenido de la tarjeta */
+.hm-card-content {
+  padding-top: 0 !important;
+}
+
+/* Grid vertical de campos */
+.hm-fields {
+  gap: 12px;
+}
+
+/* Cada campo */
+.hm-field {
+  margin-top: 6px;
+}
+
+/* Etiquetas y valores */
+.hm-label {
+  color: rgba(0, 0, 0, 0.6) !important;
+  letter-spacing: 0.08em;
+}
+
+.hm-value {
+  font-weight: 600 !important;
+}
+
+/* Inputs */
+.hm-input {
+  margin-top: 4px !important;
+}
+
+.hm-date {
+  /* ancho natural */
+}
+
+.hm-number {
+  max-width: 160px;
+}
+
+/* Separador */
+.hm-divider {
+  width: 100%;
+}
+
+/* Acciones */
+.hm-actions {
+  padding: 16px;
+}
