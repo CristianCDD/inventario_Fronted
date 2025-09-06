@@ -22,6 +22,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete"; // 👈 icono de tacho
 import HistoryIcon from "@mui/icons-material/History";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 
@@ -33,7 +34,6 @@ const tipoColor = (tipo) => {
 };
 
 const HistorialModal = ({ onClose, historialFechas, idProducto, onSaved }) => {
-  // copia editable
   const [rows, setRows] = useState(
     (historialFechas || []).map((m) => ({
       ...m,
@@ -44,7 +44,6 @@ const HistorialModal = ({ onClose, historialFechas, idProducto, onSaved }) => {
   );
   const [savingId, setSavingId] = useState(null);
 
-  // re-sincroniza cuando cambie el historial en props
   useEffect(() => {
     setRows(
       (historialFechas || []).map((m) => ({
@@ -79,14 +78,12 @@ const HistorialModal = ({ onClose, historialFechas, idProducto, onSaved }) => {
   const handleSave = async (row) => {
     try {
       setSavingId(row.id);
-      // construimos payload solo con cambios
       const payload = { id: row.id };
       if (row._fecha !== row.fecha) payload.fecha = row._fecha;
       if (Number(row._cantidad) !== Number(row.cantidad))
         payload.cantidad = Number(row._cantidad);
 
       if (Object.keys(payload).length === 1) {
-        // no hay cambios
         toggleEdit(row.id, true);
         return;
       }
@@ -96,7 +93,6 @@ const HistorialModal = ({ onClose, historialFechas, idProducto, onSaved }) => {
         payload
       );
 
-      // reflejar cambios en UI
       setRows((prev) =>
         prev.map((r) =>
           r.id === row.id
@@ -116,6 +112,26 @@ const HistorialModal = ({ onClose, historialFechas, idProducto, onSaved }) => {
       alert("No se pudo guardar el cambio.");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const handleDelete = async (rowId) => {
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de eliminar el movimiento con ID #${rowId}?`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(
+        `https://inventarioapi-cz62.onrender.com/historial/${idProducto}/`,
+        { data: { id: rowId } } // 👈 se envía el body JSON
+      );
+
+      setRows((prev) => prev.filter((r) => r.id !== rowId));
+      onSaved && onSaved();
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo eliminar el movimiento.");
     }
   };
 
@@ -209,11 +225,21 @@ const HistorialModal = ({ onClose, historialFechas, idProducto, onSaved }) => {
                   }
                   action={
                     !mov._edit ? (
-                      <Tooltip title="Editar">
-                        <IconButton onClick={() => toggleEdit(mov.id)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
+                      <Stack direction="row" spacing={1}>
+                        <Tooltip title="Editar">
+                          <IconButton onClick={() => toggleEdit(mov.id)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(mov.id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     ) : (
                       <Stack direction="row" spacing={1}>
                         <Tooltip title="Guardar">

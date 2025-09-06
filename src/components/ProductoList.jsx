@@ -12,6 +12,8 @@ import {
   TableRow,
   Paper,
   Button,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import "../styles/ProductoList.css";
 
@@ -21,7 +23,11 @@ const ProductoList = () => {
   const [showMovimientoModal, setShowMovimientoModal] = useState(false);
   const [showHistorialModal, setShowHistorialModal] = useState(false);
   const [historialFechas, setHistorialFechas] = useState([]);
-  const [selectedProductoId, setSelectedProductoId] = useState(null); // <- clave para PATCH
+  const [selectedProductoId, setSelectedProductoId] = useState(null);
+
+  // --- NUEVO: paginación ---
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 8;
 
   useEffect(() => {
     cargarProductos();
@@ -33,6 +39,7 @@ const ProductoList = () => {
       .then((response) => {
         const productosFiltrados = response.data.filter((p) => p.stock >= 1);
         setProductos(productosFiltrados);
+        setPage(1); // reset a la primera página cuando recargas datos
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -40,6 +47,16 @@ const ProductoList = () => {
   };
 
   const refreshProductos = () => cargarProductos();
+
+  // Asegura que la página actual no exceda el total cuando cambia la lista
+  const totalPages = Math.max(1, Math.ceil(productos.length / rowsPerPage));
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [productos, totalPages, page]);
+
+  // Calcula las filas visibles de la página actual
+  const startIndex = (page - 1) * rowsPerPage;
+  const currentRows = productos.slice(startIndex, startIndex + rowsPerPage);
 
   const handleShowProductoModal = () => setShowProductoModal(true);
   const handleShowMovimientoModal = () => setShowMovimientoModal(true);
@@ -63,7 +80,7 @@ const ProductoList = () => {
   };
 
   const handleShowHistorial = (id_producto) => {
-    setSelectedProductoId(id_producto); // <-- necesario para PATCH
+    setSelectedProductoId(id_producto);
     axios
       .get(`https://inventarioapi-cz62.onrender.com/historial/${id_producto}`)
       .then((response) => {
@@ -74,6 +91,8 @@ const ProductoList = () => {
         console.error("Error fetching historial:", error);
       });
   };
+
+  const handlePageChange = (_e, value) => setPage(value);
 
   return (
     <div>
@@ -106,7 +125,7 @@ const ProductoList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {productos.map((producto) => (
+            {currentRows.map((producto) => (
               <TableRow key={producto.id_producto}>
                 <TableCell>{producto.nombre}</TableCell>
                 <TableCell>{producto.codigo}</TableCell>
@@ -121,9 +140,9 @@ const ProductoList = () => {
                     Eliminar
                   </Button>
                   <Button
+                    className="btnHistorial"
                     variant="outlined"
                     onClick={() => handleShowHistorial(producto.id_producto)}
-                    style={{ marginLeft: "10px" }}
                   >
                     Historial
                   </Button>
@@ -140,6 +159,20 @@ const ProductoList = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* --- NUEVO: Pagination abajo y centrado --- */}
+      <Stack spacing={2} alignItems="center" style={{ marginTop: 16 }}>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={handlePageChange}
+          color="primary"
+          variant="outlined"
+          shape="rounded"
+          showFirstButton
+          showLastButton
+        />
+      </Stack>
 
       {/* Modal para agregar producto */}
       {showProductoModal && (
@@ -162,9 +195,8 @@ const ProductoList = () => {
         <HistorialModal
           onClose={() => setShowHistorialModal(false)}
           historialFechas={historialFechas}
-          idProducto={selectedProductoId} // <- necesario para PATCH
+          idProducto={selectedProductoId}
           onSaved={() => {
-            // <- refrescar tras guardar
             axios
               .get(
                 `https://inventarioapi-cz62.onrender.com/historial/${selectedProductoId}`
