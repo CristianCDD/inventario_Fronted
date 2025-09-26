@@ -45,7 +45,6 @@ const ProductoModal = ({ onClose, refreshProductos }) => {
             fullWidth
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
-            required
             margin="normal"
           />
           <div className="form-buttons">

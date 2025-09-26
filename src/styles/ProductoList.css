@@ -1,9 +1,12 @@
 /* src/styles/ProductoList.css */
+
+/* Título */
 h1 {
   text-align: center;
   margin-bottom: 20px;
 }
 
+/* Botones generales */
 button {
   margin: 10px;
   padding: 10px;
@@ -18,17 +21,72 @@ button:hover {
   background-color: #0056b3;
 }
 
+/* Contenedor de la tabla */
 .table-container {
   margin-top: 20px;
 }
 
+/* Botón historial en desktop */
 .table-container .btnHistorial {
   margin-left: 10px;
 }
 
+/* --- NUEVO: barra de acciones (botones + buscador) --- */
+/* Barra de acciones (desktop) */
+.acciones {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap; /* permite que el buscador baje */
+  margin-bottom: 12px;
+}
+
+/* Asegura que los botones se mantengan en fila */
+.acciones .botones {
+  display: flex;
+  flex-direction: row;
+  gap: 8px; /* espacio entre botones */
+}
+
+/* Buscador en desktop */
+.acciones .buscador {
+  flex: 0 1 300px;
+  min-width: 300px;
+}
+
+/* Móvil */
 @media (max-width: 768px) {
   .table-container .btnHistorial {
     margin: 0;
     margin-top: 10px; /* aplicas margin-top */
+  }
+
+  .acciones {
+    flex-direction: column; /* columna general */
+    align-items: stretch;
+  }
+
+  .acciones .botones {
+    justify-content: center; /* centra los dos botones */
+  }
+
+  .acciones .buscador {
+    flex: 1 1 100%;
+    min-width: 0;
+    margin-top: 8px;
+  }
+
+  .acciones button {
+    width: 100%;
+  }
+
+  .acciones {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .acciones .btnMovimiento {
+    margin-left: 0px;
   }
 }

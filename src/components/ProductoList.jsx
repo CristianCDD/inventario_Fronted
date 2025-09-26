@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import ProductoModal from "./ProductoModal";
 import MovimientoModal from "./MovimientoModal";
@@ -14,7 +14,12 @@ import {
   Button,
   Pagination,
   Stack,
+  TextField,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 import "../styles/ProductoList.css";
 
 const ProductoList = () => {
@@ -25,7 +30,10 @@ const ProductoList = () => {
   const [historialFechas, setHistorialFechas] = useState([]);
   const [selectedProductoId, setSelectedProductoId] = useState(null);
 
-  // --- NUEVO: paginación ---
+  // --- NUEVO: buscador ---
+  const [query, setQuery] = useState("");
+
+  // --- Paginación ---
   const [page, setPage] = useState(1);
   const rowsPerPage = 8;
 
@@ -37,9 +45,8 @@ const ProductoList = () => {
     axios
       .get("https://inventarioapi-cz62.onrender.com/listado/")
       .then((response) => {
-        const productosFiltrados = response.data.filter((p) => p.stock >= 1);
-        setProductos(productosFiltrados);
-        setPage(1); // reset a la primera página cuando recargas datos
+        setProductos(response.data); // ya no filtramos por stock
+        setPage(1);
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -48,15 +55,32 @@ const ProductoList = () => {
 
   const refreshProductos = () => cargarProductos();
 
-  // Asegura que la página actual no exceda el total cuando cambia la lista
-  const totalPages = Math.max(1, Math.ceil(productos.length / rowsPerPage));
+  // --- Filtrado memorizado por nombre o código ---
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return productos;
+    return productos.filter((p) => {
+      const nombre = (p.nombre ?? "").toString().toLowerCase();
+      const codigo = (p.codigo ?? "").toString().toLowerCase();
+      return nombre.includes(q) || codigo.includes(q);
+    });
+  }, [productos, query]);
+
+  // Asegurar que la paginación use la lista filtrada
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
-  }, [productos, totalPages, page]);
+  }, [filtered.length, totalPages, page]);
 
-  // Calcula las filas visibles de la página actual
+  // Resetear a página 1 cuando cambie el término de búsqueda
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  // Filas visibles de la página actual (de la lista filtrada)
   const startIndex = (page - 1) * rowsPerPage;
-  const currentRows = productos.slice(startIndex, startIndex + rowsPerPage);
+  const currentRows = filtered.slice(startIndex, startIndex + rowsPerPage);
 
   const handleShowProductoModal = () => setShowProductoModal(true);
   const handleShowMovimientoModal = () => setShowMovimientoModal(true);
@@ -98,21 +122,53 @@ const ProductoList = () => {
     <div>
       <h1>Listado de Productos</h1>
 
-      <Button
-        variant="contained"
-        onClick={handleShowProductoModal}
-        style={{ margin: "10px" }}
+      {/* --- Barra de acciones --- */}
+      <Stack
+        className="acciones"
+        direction="row"
+        spacing={2} // espacio uniforme entre botones y buscador
+        alignItems="center"
       >
-        Agregar Producto
-      </Button>
-      <Button
-        variant="contained"
-        onClick={handleShowMovimientoModal}
-        style={{ margin: "10px" }}
-      >
-        Agregar Movimiento
-      </Button>
+        <Button variant="contained" onClick={handleShowProductoModal}>
+          Agregar Producto
+        </Button>
+        <Button
+          className="btnMovimiento"
+          variant="contained"
+          onClick={handleShowMovimientoModal}
+        >
+          Agregar Movimiento
+        </Button>
 
+        {/* --- Buscador pegado a los botones --- */}
+        <TextField
+          className="buscador"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar por nombre o código…"
+          variant="outlined"
+          size="small"
+          sx={{ minWidth: 300 }} // ancho mínimo para que no quede muy chico
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: query ? (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="Limpiar búsqueda"
+                  onClick={() => setQuery("")}
+                  edge="end"
+                >
+                  <ClearIcon />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          }}
+        />
+      </Stack>
       <TableContainer component={Paper} className="table-container">
         <Table>
           <TableHead>
@@ -160,7 +216,7 @@ const ProductoList = () => {
         </Table>
       </TableContainer>
 
-      {/* --- NUEVO: Pagination abajo y centrado --- */}
+      {/* Pagination abajo y centrado (usa el total de la lista filtrada) */}
       <Stack spacing={2} alignItems="center" style={{ marginTop: 16 }}>
         <Pagination
           count={totalPages}
